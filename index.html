@@ -1,0 +1,654 @@
+
+
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Canvas System - ITK Rheinland</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0066b3 0%, #004c8c 100%);
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    #toolbar {
+        background: #ffffff;
+        padding: 15px 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        border-bottom: 3px solid #0066b3;
+    }
+
+    .logo-text {
+        font-weight: bold;
+        color: #0066b3;
+        font-size: 18px;
+        margin-right: 20px;
+    }
+
+    button {
+        background: #0066b3;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    button:hover {
+        background: #004c8c;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-icon::before {
+        content: '';
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+    }
+
+    .btn-add::before {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>') center/contain no-repeat;
+    }
+
+    .btn-save::before {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>') center/contain no-repeat;
+    }
+
+    .btn-load::before {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>') center/contain no-repeat;
+    }
+
+    .btn-delete::before {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>') center/contain no-repeat;
+    }
+
+    #canvas {
+        width: 100%;
+        height: calc(100vh - 73px);
+        position: relative;
+        overflow: auto;
+        background-color: #f5f5f5;
+        background-image: 
+            linear-gradient(rgba(0, 102, 179, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 102, 179, 0.05) 1px, transparent 1px);
+        background-size: 30px 30px;
+    }
+
+    .card {
+        position: absolute;
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        width: 400px;
+        transition: box-shadow 0.3s, transform 0.2s;
+        border: 1px solid #e0e0e0;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 24px rgba(0, 102, 179, 0.2);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #0066b3 0%, #004c8c 100%);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 6px 6px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: move;
+        user-select: none;
+    }
+
+    .card-header:active {
+        cursor: grabbing;
+    }
+
+    .card-title {
+        font-weight: 600;
+        font-size: 15px;
+    }
+
+    .card-controls {
+        display: flex;
+        gap: 6px;
+    }
+
+    .card-btn {
+        background: rgba(255, 255, 255, 0.25);
+        border: none;
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .card-btn:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    .card-btn svg {
+        width: 16px;
+        height: 16px;
+        stroke: white;
+        fill: none;
+        stroke-width: 2;
+    }
+
+    .card-content {
+        padding: 16px;
+    }
+
+    .card-render {
+        border: 2px solid #e8f4fd;
+        border-radius: 4px;
+        padding: 16px;
+        min-height: 120px;
+        background: #ffffff;
+        overflow: auto;
+        max-height: 500px;
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 4px;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 13px;
+        resize: vertical;
+        line-height: 1.5;
+        transition: border-color 0.3s;
+    }
+
+    textarea:focus {
+        outline: none;
+        border-color: #0066b3;
+    }
+
+    .edit-mode .card-render {
+        display: none;
+    }
+
+    .view-mode textarea {
+        display: none;
+    }
+
+    .mode-indicator {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+
+    .edit-mode .mode-indicator {
+        background: #ffd700;
+        color: #333;
+    }
+
+    .view-mode .mode-indicator {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+    #modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content h2 {
+        margin-bottom: 20px;
+        color: #0066b3;
+        font-size: 24px;
+        border-bottom: 3px solid #0066b3;
+        padding-bottom: 10px;
+    }
+
+    .modal-content label {
+        display: block;
+        margin-bottom: 6px;
+        color: #333;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .modal-content input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 18px;
+        border: 2px solid #e0e0e0;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+
+    .modal-content input:focus {
+        outline: none;
+        border-color: #0066b3;
+    }
+
+    .modal-content textarea {
+        margin-bottom: 18px;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .cancel-btn {
+        background: #6c757d;
+    }
+
+    .cancel-btn:hover {
+        background: #5a6268;
+    }
+
+    .info-banner {
+        background: #e8f4fd;
+        color: #004c8c;
+        padding: 12px 20px;
+        text-align: center;
+        font-size: 13px;
+        border-bottom: 1px solid #b3d9f2;
+    }
+
+    .info-banner strong {
+        color: #0066b3;
+    }
+
+    .template-buttons {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .template-btn {
+        background: #e8f4fd;
+        color: #0066b3;
+        border: 1px solid #0066b3;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .template-btn:hover {
+        background: #0066b3;
+        color: white;
+    }
+</style>
+```
+
+</head>
+<body>
+    <div id="toolbar">
+        <span class="logo-text">HTML Canvas System</span>
+        <button class="btn-icon btn-add" onclick="createCard()">Neue Karte</button>
+        <button class="btn-icon btn-save" onclick="exportCanvas()">Speichern</button>
+        <button class="btn-icon btn-load" onclick="importCanvas()">Laden</button>
+        <button class="btn-icon btn-delete" onclick="clearCanvas()">Löschen</button>
+    </div>
+
+```
+<div class="info-banner">
+    <strong>Tipp:</strong> Ziehe Karten mit der Maus | Klicke auf Stift-Symbol zum Bearbeiten | Optimal: 3-6 Karten für gute Übersicht
+</div>
+
+<div id="canvas"></div>
+
+<div id="modal">
+    <div class="modal-content">
+        <h2>Neue HTML Karte erstellen</h2>
+        
+        <div class="template-buttons">
+            <button class="template-btn" onclick="loadTemplate('header')">Header</button>
+            <button class="template-btn" onclick="loadTemplate('hero')">Hero Section</button>
+            <button class="template-btn" onclick="loadTemplate('card')">Card</button>
+            <button class="template-btn" onclick="loadTemplate('form')">Formular</button>
+            <button class="template-btn" onclick="loadTemplate('footer')">Footer</button>
+        </div>
+
+        <label for="cardTitle">Titel der Karte:</label>
+        <input type="text" id="cardTitle" placeholder="z.B. Header" value="Neue Seite">
+        
+        <label for="cardHtml">HTML Code:</label>
+        <textarea id="cardHtml" placeholder="HTML Code hier eingeben..."></textarea>
+        
+        <div class="modal-buttons">
+            <button class="cancel-btn" onclick="closeModal()">Abbrechen</button>
+            <button onclick="addCard()">Karte erstellen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cardCounter = 0;
+    let draggedCard = null;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    const templates = {
+        header: `<header style="background: linear-gradient(135deg, #0066b3 0%, #004c8c 100%); color: white; padding: 20px; text-align: center;">
+```
+
+  <h1>ITK Rheinland</h1>
+  <nav style="margin-top: 15px;">
+    <a href="#" style="color: white; margin: 0 15px; text-decoration: none;">Home</a>
+    <a href="#" style="color: white; margin: 0 15px; text-decoration: none;">Über uns</a>
+    <a href="#" style="color: white; margin: 0 15px; text-decoration: none;">Kontakt</a>
+  </nav>
+</header>`,
+
+```
+        hero: `<section style="background: linear-gradient(135deg, #0066b3 0%, #004c8c 100%); color: white; padding: 80px 20px; text-align: center;">
+```
+
+  <h1 style="font-size: 48px; margin-bottom: 20px;">Willkommen</h1>
+  <p style="font-size: 20px; margin-bottom: 30px;">Ihre digitale Lösung</p>
+  <button style="background: white; color: #0066b3; border: none; padding: 15px 40px; font-size: 16px; border-radius: 4px; cursor: pointer;">Mehr erfahren</button>
+</section>`,
+
+```
+        card: `<div style="background: white; border: 1px solid #e0e0e0; border-radius: 6px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+```
+
+  <h3 style="color: #0066b3; margin-bottom: 15px;">Überschrift</h3>
+  <p style="color: #666; line-height: 1.6;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</p>
+  <button style="background: #0066b3; color: white; border: none; padding: 10px 20px; border-radius: 4px; margin-top: 15px; cursor: pointer;">Weiterlesen</button>
+</div>`,
+
+```
+        form: `<form style="background: white; padding: 30px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+```
+
+  <h3 style="color: #0066b3; margin-bottom: 20px;">Kontaktformular</h3>
+  <div style="margin-bottom: 15px;">
+    <label style="display: block; margin-bottom: 5px; color: #333;">Name:</label>
+    <input type="text" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+  </div>
+  <div style="margin-bottom: 15px;">
+    <label style="display: block; margin-bottom: 5px; color: #333;">E-Mail:</label>
+    <input type="email" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+  </div>
+  <button type="submit" style="background: #0066b3; color: white; border: none; padding: 12px 30px; border-radius: 4px; cursor: pointer;">Absenden</button>
+</form>`,
+
+```
+        footer: `<footer style="background: #004c8c; color: white; padding: 40px 20px; text-align: center;">
+```
+
+  <div style="margin-bottom: 20px;">
+    <p>&copy; 2025 ITK Rheinland</p>
+  </div>
+  <div>
+    <a href="#" style="color: white; margin: 0 10px; text-decoration: none;">Impressum</a>
+    <a href="#" style="color: white; margin: 0 10px; text-decoration: none;">Datenschutz</a>
+    <a href="#" style="color: white; margin: 0 10px; text-decoration: none;">Kontakt</a>
+  </div>
+</footer>`
+        };
+
+```
+    window.addEventListener('DOMContentLoaded', () => {
+        addCardWithData('Header', templates.header, 100, 100);
+        addCardWithData('Hero Section', templates.hero, 550, 100);
+        addCardWithData('Content Card', templates.card, 1000, 100);
+    });
+
+    function loadTemplate(type) {
+        const titles = {
+            header: 'Header',
+            hero: 'Hero Section',
+            card: 'Content Card',
+            form: 'Kontaktformular',
+            footer: 'Footer'
+        };
+        
+        document.getElementById('cardTitle').value = titles[type];
+        document.getElementById('cardHtml').value = templates[type];
+    }
+
+    function createCard() {
+        document.getElementById('modal').classList.add('active');
+        document.getElementById('cardTitle').value = 'Neue Seite ' + (cardCounter + 1);
+        document.getElementById('cardHtml').value = templates.card;
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+    }
+
+    function addCard() {
+        const title = document.getElementById('cardTitle').value || 'Unbenannt';
+        const html = document.getElementById('cardHtml').value || '<p>Leere Karte</p>';
+        
+        addCardWithData(title, html, 50 + cardCounter * 30, 50 + cardCounter * 30);
+        closeModal();
+    }
+
+    function addCardWithData(title, html, left, top) {
+        const canvas = document.getElementById('canvas');
+        const card = document.createElement('div');
+        card.className = 'card view-mode';
+        card.id = 'card-' + (++cardCounter);
+        card.style.left = left + 'px';
+        card.style.top = top + 'px';
+
+        card.innerHTML = `
+            <div class="card-header">
+                <div>
+                    <span class="card-title">${escapeHtml(title)}</span>
+                    <span class="mode-indicator">ANSICHT</span>
+                </div>
+                <div class="card-controls">
+                    <button class="card-btn" onclick="toggleEdit('${card.id}')" title="Bearbeiten">
+                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="card-btn" onclick="deleteCard('${card.id}')" title="Löschen">
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <textarea class="card-textarea">${escapeHtml(html)}</textarea>
+                <div class="card-render">${html}</div>
+            </div>
+        `;
+
+        canvas.appendChild(card);
+
+        const header = card.querySelector('.card-header');
+        header.addEventListener('mousedown', startDrag);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function toggleEdit(cardId) {
+        const card = document.getElementById(cardId);
+        const textarea = card.querySelector('.card-textarea');
+        const render = card.querySelector('.card-render');
+        const indicator = card.querySelector('.mode-indicator');
+
+        if (card.classList.contains('view-mode')) {
+            card.classList.remove('view-mode');
+            card.classList.add('edit-mode');
+            indicator.textContent = 'BEARBEITEN';
+            textarea.focus();
+        } else {
+            card.classList.remove('edit-mode');
+            card.classList.add('view-mode');
+            indicator.textContent = 'ANSICHT';
+            render.innerHTML = textarea.value;
+        }
+    }
+
+    function deleteCard(cardId) {
+        if (confirm('Karte wirklich löschen?')) {
+            document.getElementById(cardId).remove();
+        }
+    }
+
+    function startDrag(e) {
+        draggedCard = e.target.closest('.card');
+        const rect = draggedCard.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDrag);
+        draggedCard.style.zIndex = 1000;
+        draggedCard.style.cursor = 'grabbing';
+    }
+
+    function drag(e) {
+        if (!draggedCard) return;
+        
+        const canvas = document.getElementById('canvas');
+        const canvasRect = canvas.getBoundingClientRect();
+        
+        let x = e.clientX - canvasRect.left - offsetX + canvas.scrollLeft;
+        let y = e.clientY - canvasRect.top - offsetY + canvas.scrollTop;
+        
+        draggedCard.style.left = Math.max(0, x) + 'px';
+        draggedCard.style.top = Math.max(0, y) + 'px';
+    }
+
+    function stopDrag() {
+        if (draggedCard) {
+            draggedCard.style.zIndex = '';
+            draggedCard.style.cursor = '';
+            draggedCard = null;
+        }
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('mouseup', stopDrag);
+    }
+
+    function exportCanvas() {
+        const cards = [];
+        document.querySelectorAll('.card').forEach(card => {
+            const title = card.querySelector('.card-title').textContent;
+            const html = card.querySelector('.card-textarea').value;
+            const left = card.style.left;
+            const top = card.style.top;
+            cards.push({ title, html, left, top });
+        });
+
+        const data = JSON.stringify(cards, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'canvas-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        alert('Canvas wurde gespeichert!');
+    }
+
+    function importCanvas() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = event => {
+                try {
+                    const cards = JSON.parse(event.target.result);
+                    clearCanvas(false);
+                    cards.forEach(cardData => {
+                        addCardWithData(
+                            cardData.title,
+                            cardData.html,
+                            parseInt(cardData.left),
+                            parseInt(cardData.top)
+                        );
+                    });
+                    alert('Canvas wurde geladen!');
+                } catch (error) {
+                    alert('Fehler beim Laden der Datei!');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    function clearCanvas(confirmFirst = true) {
+        if (!confirmFirst || confirm('Wirklich alle Karten löschen?')) {
+            document.getElementById('canvas').innerHTML = '';
+            cardCounter = 0;
+        }
+    }
+</script>
+```
+
+</body>
+</html>
